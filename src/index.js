@@ -2,7 +2,7 @@ if (require('electron-squirrel-startup')) {
     process.exit(0);
 }
 
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, desktopCapturer, screen } = require('electron');
 const { createWindow, updateGlobalShortcuts } = require('./utils/window');
 const { setupGeminiIpcHandlers, stopMacOSAudioCapture, sendToRenderer } = require('./utils/gemini');
 const storage = require('./storage');
@@ -260,6 +260,68 @@ function setupStorageIpcHandlers() {
 }
 
 function setupGeneralIpcHandlers() {
+    ipcMain.handle('capture-screen', async (event, { quality = 'medium' } = {}) => {
+        try {
+            // Hide window so it is not visible in screenshot
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.setOpacity(0);
+            }
+
+            // Wait 150ms for the OS compositor to re-render without the window
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            // Target the display where the window is currently positioned
+            let targetDisplay = screen.getPrimaryDisplay();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                targetDisplay = screen.getDisplayMatching(mainWindow.getBounds());
+            }
+
+            const { width, height } = targetDisplay.size;
+            // Downscale to max 1280px wide for faster transfer to vision model
+            const MAX_WIDTH = 1280;
+            const scale = width > MAX_WIDTH ? MAX_WIDTH / width : 1;
+            const thumbW = Math.round(width * scale);
+            const thumbH = Math.round(height * scale);
+
+            const sources = await desktopCapturer.getSources({
+                types: ['screen'],
+                thumbnailSize: { width: thumbW, height: thumbH },
+            });
+
+            // Restore window opacity immediately
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.setOpacity(1);
+            }
+
+            if (!sources || sources.length === 0) {
+                return { success: false, error: 'No screen capture sources available' };
+            }
+
+            const source = sources.find(s => s.display_id === targetDisplay.id.toString()) || sources[0];
+            const img = source.thumbnail;
+
+            let qualityVal = 70;
+            if (quality === 'high') qualityVal = 85;
+            else if (quality === 'low') qualityVal = 50;
+
+            const buffer = img.toJPEG(qualityVal);
+            const base64Data = buffer.toString('base64');
+
+            return {
+                success: true,
+                data: base64Data,
+                width: thumbW,
+                height: thumbH,
+            };
+        } catch (error) {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.setOpacity(1);
+            }
+            console.error('Error during screen capture:', error);
+            return { success: false, error: error.message };
+        }
+    });
+
     ipcMain.handle('get-app-version', async () => {
         return app.getVersion();
     });

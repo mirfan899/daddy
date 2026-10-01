@@ -562,103 +562,44 @@ async function captureManualScreenshot(imageQuality = null) {
     console.log('Manual screenshot triggered');
     const quality = imageQuality || currentImageQuality;
 
-    if (!mediaStream) {
-        console.error('No media stream available');
-        return;
-    }
+    try {
+        if (cheatingDaddyApp && cheatingDaddyApp.currentView !== 'assistant') {
+            cheatingDaddyApp.currentView = 'assistant';
+        }
 
-    // Lazy init of video element
-    if (!hiddenVideo) {
-        hiddenVideo = document.createElement('video');
-        hiddenVideo.srcObject = mediaStream;
-        hiddenVideo.muted = true;
-        hiddenVideo.playsInline = true;
-        await hiddenVideo.play();
+        cheatingDaddy.setStatus('Capturing screen...');
+        const captureResult = await ipcRenderer.invoke('capture-screen', { quality });
 
-        await new Promise(resolve => {
-            if (hiddenVideo.readyState >= 2) return resolve();
-            hiddenVideo.onloadedmetadata = () => resolve();
+        if (!captureResult || !captureResult.success || !captureResult.data) {
+            console.error('Failed to capture screen:', captureResult?.error);
+            cheatingDaddy.addNewResponse(`Error capturing screen: ${captureResult?.error || 'Unknown error'}`);
+            cheatingDaddy.setStatus('Error');
+            return;
+        }
+
+        const base64data = captureResult.data;
+        console.log(`Sending image: ${captureResult.width}x${captureResult.height}, ~${Math.round(base64data.length / 1024)}KB`);
+        cheatingDaddy.setStatus('Analyzing screen with Gemini...');
+
+        // Send image with prompt to HTTP API (response streams via IPC events)
+        const result = await ipcRenderer.invoke('send-image-content', {
+            data: base64data,
+            prompt: MANUAL_SCREENSHOT_PROMPT,
         });
 
-        // Lazy init of canvas based on video dimensions
-        offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = hiddenVideo.videoWidth;
-        offscreenCanvas.height = hiddenVideo.videoHeight;
-        offscreenContext = offscreenCanvas.getContext('2d');
+        if (result.success) {
+            console.log(`Image response completed from ${result.model}`);
+            cheatingDaddy.setStatus('Ready');
+        } else {
+            console.error('Failed to get image response:', result.error);
+            cheatingDaddy.addNewResponse(`Error: ${result.error}`);
+            cheatingDaddy.setStatus('Error');
+        }
+    } catch (err) {
+        console.error('Error in captureManualScreenshot:', err);
+        cheatingDaddy.addNewResponse(`Error: ${err.message}`);
+        cheatingDaddy.setStatus('Error');
     }
-
-    // Check if video is ready
-    if (hiddenVideo.readyState < 2) {
-        console.warn('Video not ready yet, skipping screenshot');
-        return;
-    }
-
-    // Downscale to max 1280px wide for faster transfer — vision models don't need 4K
-    const MAX_WIDTH = 1280;
-    const srcW = hiddenVideo.videoWidth;
-    const srcH = hiddenVideo.videoHeight;
-    let destW = srcW;
-    let destH = srcH;
-    if (srcW > MAX_WIDTH) {
-        destW = MAX_WIDTH;
-        destH = Math.round(srcH * (MAX_WIDTH / srcW));
-    }
-    offscreenCanvas.width = destW;
-    offscreenCanvas.height = destH;
-    offscreenContext.drawImage(hiddenVideo, 0, 0, destW, destH);
-
-    let qualityValue;
-    switch (quality) {
-        case 'high':
-            qualityValue = 0.85;
-            break;
-        case 'medium':
-            qualityValue = 0.6;
-            break;
-        case 'low':
-            qualityValue = 0.4;
-            break;
-        default:
-            qualityValue = 0.6;
-    }
-
-    offscreenCanvas.toBlob(
-        async blob => {
-            if (!blob) {
-                console.error('Failed to create blob from canvas');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const base64data = reader.result.split(',')[1];
-
-                if (!base64data || base64data.length < 100) {
-                    console.error('Invalid base64 data generated');
-                    return;
-                }
-
-                console.log(`Sending image: ${destW}x${destH}, ~${Math.round(base64data.length / 1024)}KB`);
-
-                // Send image with prompt to HTTP API (response streams via IPC events)
-                const result = await ipcRenderer.invoke('send-image-content', {
-                    data: base64data,
-                    prompt: MANUAL_SCREENSHOT_PROMPT,
-                });
-
-                if (result.success) {
-                    console.log(`Image response completed from ${result.model}`);
-                    // Response already displayed via streaming events (new-response/update-response)
-                } else {
-                    console.error('Failed to get image response:', result.error);
-                    cheatingDaddy.addNewResponse(`Error: ${result.error}`);
-                }
-            };
-            reader.readAsDataURL(blob);
-        },
-        'image/jpeg',
-        qualityValue
-    );
 }
 
 // Expose functions to global scope for external access
