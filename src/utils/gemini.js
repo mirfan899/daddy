@@ -3,7 +3,7 @@ const { BrowserWindow, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const { saveDebugAudio } = require('../audioUtils');
 const { getSystemPrompt } = require('./prompts');
-const { getAvailableModel, incrementLimitCount, getApiKey, getGroqApiKey, incrementCharUsage, getConfig } = require('../storage');
+const { getAvailableModel, incrementLimitCount, getApiKey, getGroqApiKey, incrementCharUsage, getConfig, getPreferences } = require('../storage');
 const { connectCloud, sendCloudAudio, sendCloudText, sendCloudImage, closeCloud, isCloudActive, setOnTurnComplete } = require('./cloud');
 const { startTransportLog, logTransportEvent, closeTransportLog } = require('./transportLogger');
 
@@ -212,7 +212,7 @@ function hasGroqKey() {
 }
 
 function sendFinalTranscriptionToGroq() {
-    if (!hasGroqKey() || groqRequestStartedForTurn) {
+    if (groqRequestStartedForTurn) {
         return;
     }
 
@@ -222,7 +222,11 @@ function sendFinalTranscriptionToGroq() {
     }
 
     groqRequestStartedForTurn = true;
-    sendToGroq(transcription);
+    if (hasGroqKey()) {
+        sendToGroq(transcription);
+    } else {
+        sendTextToGeminiHttp(transcription);
+    }
 }
 
 function trimConversationHistoryForGemma(history, maxChars = 42000) {
@@ -662,8 +666,17 @@ async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'int
     }
 
     try {
+        let liveModel = getConfig().geminiLiveModel || 'gemini-3.8-flash';
+        // Map model to supported Live WebSocket endpoint
+        if (liveModel.includes('3.8')) {
+            liveModel = 'gemini-3.8-live';
+        } else if (liveModel.includes('flash') || !liveModel.includes('live')) {
+            liveModel = 'gemini-3.1-flash-live-preview';
+        }
+
+        console.log(`Connecting Live session with model: ${liveModel} (configured: ${getConfig().geminiLiveModel})`);
         const session = await client.live.connect({
-            model: getConfig().geminiLiveModel,
+            model: liveModel,
             callbacks: {
                 onopen: function () {
                     logTransportEvent('gemini.live.opened', {});
@@ -1049,6 +1062,84 @@ async function sendImageToGeminiHttp(base64Data, prompt) {
     }
 }
 
+async function sendTextToGeminiHttp(text) {
+    const primaryModel = getAvailableModel();
+    const fallbackModels = [primaryModel, 'gemini-2.5-flash', 'gemini-3.5-flash-lite'].filter((m, idx, arr) => arr.indexOf(m) === idx);
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        return { success: false, error: 'No API key configured' };
+    }
+
+    // Maintain conversation history for chat context
+    groqConversationHistory.push({
+        role: 'user',
+        content: text.trim(),
+    });
+
+    if (groqConversationHistory.length > 20) {
+        groqConversationHistory = groqConversationHistory.slice(-20);
+    }
+
+    const messages = groqConversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+    }));
+
+    const prefs = getPreferences ? getPreferences() : {};
+    const systemPrompt =
+        currentSystemPrompt ||
+        getSystemPrompt(prefs.selectedProfile || currentProfile || 'interview', prefs.customPrompt || currentCustomPrompt || '');
+
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+
+    let lastError = null;
+    for (const model of fallbackModels) {
+        try {
+            console.log(`Sending text to ${model} (streaming)...`);
+            const response = await ai.models.generateContentStream({
+                model: model,
+                contents: messages,
+                config: {
+                    systemInstruction: systemPrompt,
+                },
+            });
+
+            incrementLimitCount(model);
+
+            let fullText = '';
+            let isFirst = true;
+            for await (const chunk of response) {
+                const chunkText = chunk.text;
+                if (chunkText) {
+                    fullText += chunkText;
+                    sendToRenderer(isFirst ? 'new-response' : 'update-response', fullText);
+                    isFirst = false;
+                }
+            }
+
+            console.log(`Text response completed from ${model}`);
+
+            if (fullText) {
+                groqConversationHistory.push({
+                    role: 'assistant',
+                    content: fullText.trim(),
+                });
+                saveConversationTurn(text, fullText);
+            }
+
+            sendToRenderer('update-status', 'Ready');
+            return { success: true, text: fullText, model: model };
+        } catch (error) {
+            console.warn(`Model ${model} failed: ${error.message}, trying fallback if available...`);
+            lastError = error;
+        }
+    }
+
+    console.error('All Gemini text models failed:', lastError);
+    sendToRenderer('update-status', 'Error: ' + (lastError?.message || 'Failed to generate response'));
+    return { success: false, error: lastError?.message || 'Failed to generate response' };
+}
+
 function setupGeminiIpcHandlers(geminiSessionRef) {
     // Store the geminiSessionRef globally for reconnection access
     global.geminiSessionRef = geminiSessionRef;
@@ -1231,18 +1322,16 @@ function setupGeminiIpcHandlers(geminiSessionRef) {
             }
         }
 
-        if (!geminiSessionRef.current) return { success: false, error: 'No active Gemini session' };
-
         try {
             console.log('Sending text message:', text);
 
             if (hasGroqKey()) {
                 groqRequestStartedForTurn = true;
                 sendToGroq(text.trim());
+                return { success: true };
             }
 
-            await geminiSessionRef.current.sendRealtimeInput({ text: text.trim() });
-            return { success: true };
+            return await sendTextToGeminiHttp(text.trim());
         } catch (error) {
             console.error('Error sending text:', error);
             return { success: false, error: error.message };
