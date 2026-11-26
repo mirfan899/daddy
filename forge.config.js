@@ -7,6 +7,8 @@ module.exports = {
         extraResource: ['./src/assets/SystemAudioDump'],
         name: 'Daddy',
         icon: 'src/assets/logo',
+        // keep build outputs and installers in the repo root out of app.asar
+        ignore: [/^\/out($|\/)/, /^\/out-portable($|\/)/, /^\/Daddy-/i, /^\/installer\.iss$/],
         // use `security find-identity -v -p codesigning` to find your identity
         // for macos signing
         // also fuck apple

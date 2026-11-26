@@ -842,6 +842,17 @@ export class CheatingDaddyApp extends LitElement {
                 </svg>`,
             },
             {
+                id: 'gemini-browser',
+                label: 'Gemini Browser',
+                action: () => window.require('electron').ipcRenderer.invoke('open-gemini-browser'),
+                icon: html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m.6-3h16.8M3.6 15h16.8" />
+                        <path d="M11.5 3a17 17 0 0 0 0 18m1-18a17 17 0 0 1 0 18" />
+                    </g>
+                </svg>`,
+            },
+            {
                 id: 'history',
                 label: 'History',
                 icon: html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -897,7 +908,7 @@ export class CheatingDaddyApp extends LitElement {
                         item => html`
                             <button
                                 class="nav-item ${this.currentView === item.id ? 'active' : ''}"
-                                @click=${() => this.navigate(item.id)}
+                                @click=${() => (item.action ? item.action() : this.navigate(item.id))}
                                 title=${item.label}
                             >
                                 ${item.icon} ${item.label}

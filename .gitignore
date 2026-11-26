@@ -96,3 +96,7 @@ out/
 
 # Executables and installers
 *.exe
+
+# portable builds and installers
+out-portable/
+Daddy-Portable-*
