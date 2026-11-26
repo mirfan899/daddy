@@ -6,7 +6,6 @@ const { app, BrowserWindow, shell, ipcMain, desktopCapturer, screen } = require(
 const { createWindow, updateGlobalShortcuts } = require('./utils/window');
 const { setupGeminiIpcHandlers, stopMacOSAudioCapture, sendToRenderer } = require('./utils/gemini');
 const storage = require('./storage');
-const { openGeminiBrowser } = require('./utils/browserWindow');
 
 const geminiSessionRef = { current: null };
 let mainWindow = null;
@@ -344,16 +343,6 @@ function setupGeneralIpcHandlers() {
             return { success: true };
         } catch (error) {
             console.error('Error opening external URL:', error);
-            return { success: false, error: error.message };
-        }
-    });
-
-    ipcMain.handle('open-gemini-browser', async () => {
-        try {
-            openGeminiBrowser();
-            return { success: true };
-        } catch (error) {
-            console.error('Error opening Gemini browser:', error);
             return { success: false, error: error.message };
         }
     });
