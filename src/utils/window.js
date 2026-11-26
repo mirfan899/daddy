@@ -110,6 +110,19 @@ function getDefaultKeybinds() {
     };
 }
 
+// Outside a live session the window isn't always-on-top (Linux/macOS), so showInactive() would bring it back
+// behind other windows and look like nothing happened. Bring it to the front there; stay non-focusing when on top.
+function toggleWindowVisibility(mainWindow) {
+    if (mainWindow.isVisible()) {
+        mainWindow.hide();
+    } else if (mainWindow.isAlwaysOnTop()) {
+        mainWindow.showInactive();
+    } else {
+        mainWindow.show();
+        mainWindow.focus();
+    }
+}
+
 function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessionRef) {
     console.log('Updating global shortcuts with:', keybinds);
 
@@ -158,14 +171,8 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
     // Register toggle visibility shortcut
     if (keybinds.toggleVisibility) {
         try {
-            globalShortcut.register(keybinds.toggleVisibility, () => {
-                if (mainWindow.isVisible()) {
-                    mainWindow.hide();
-                } else {
-                    mainWindow.showInactive();
-                }
-            });
-            console.log(`Registered toggleVisibility: ${keybinds.toggleVisibility}`);
+            const ok = globalShortcut.register(keybinds.toggleVisibility, () => toggleWindowVisibility(mainWindow));
+            console.log(ok ? `Registered toggleVisibility: ${keybinds.toggleVisibility}` : `toggleVisibility ${keybinds.toggleVisibility} is taken by another app; pick a different key in Settings`);
         } catch (error) {
             console.error(`Failed to register toggleVisibility (${keybinds.toggleVisibility}):`, error);
         }
@@ -329,11 +336,7 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
                 return { success: false, error: 'Window has been destroyed' };
             }
 
-            if (mainWindow.isVisible()) {
-                mainWindow.hide();
-            } else {
-                mainWindow.showInactive();
-            }
+            toggleWindowVisibility(mainWindow);
             return { success: true };
         } catch (error) {
             console.error('Error toggling window visibility:', error);

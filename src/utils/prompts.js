@@ -253,6 +253,12 @@ Provide direct exam answers in **markdown format**. Include the question text, t
     },
 };
 
+const LANGUAGE_RULE = `**LANGUAGE:**
+- Reply in the language the question was asked in: **English** or **Urdu** only.
+- If the question is in Urdu, reply in Urdu written in Urdu script (اردو). Never reply in Hindi and never use Devanagari script.
+- Spoken Urdu is sometimes transcribed in Devanagari (Hindi) script; treat that as Urdu and reply in Urdu script.
+- If the question mixes English and Urdu, reply in the language that dominates. Keep code, technical terms and names in English.`;
+
 function buildSystemPrompt(promptParts, customPrompt = '', googleSearchEnabled = true) {
     const sections = [promptParts.intro, '\n\n', promptParts.formatRequirements];
 
@@ -262,6 +268,7 @@ function buildSystemPrompt(promptParts, customPrompt = '', googleSearchEnabled =
     }
 
     sections.push('\n\n', promptParts.content, '\n\nUser-provided context\n-----\n', customPrompt, '\n-----\n\n', promptParts.outputInstructions);
+    sections.push('\n\n', LANGUAGE_RULE);
 
     return sections.join('');
 }
