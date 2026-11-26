@@ -158,11 +158,12 @@ function getCurrentSessionData() {
 async function getEnabledTools() {
     const tools = [];
 
-    // Check if Google Search is enabled (default: true)
-    const googleSearchEnabled = await getStoredSetting('googleSearchEnabled', 'true');
+    // Read the saved preference (default off). Search grounding has its own small free quota; when it's used up,
+    // Gemini Live closes the session with "exceeded your current quota" even though plain live audio still works.
+    const googleSearchEnabled = getPreferences().googleSearchEnabled === true;
     console.log('Google Search enabled:', googleSearchEnabled);
 
-    if (googleSearchEnabled === 'true') {
+    if (googleSearchEnabled) {
         tools.push({ googleSearch: {} });
         console.log('Added Google Search tool');
     } else {
