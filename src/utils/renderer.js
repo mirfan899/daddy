@@ -553,10 +553,13 @@ async function captureScreenshot(imageQuality = 'medium', isManual = false) {
     );
 }
 
-const MANUAL_SCREENSHOT_PROMPT = `Help me on this page, give me the answer no bs, complete answer.
-So if its a code question, give me the approach in few bullet points, then the entire code. Also if theres anything else i need to know, tell me.
-If its a question about the website, give me the answer no bs, complete answer.
-If its a mcq question, give me the answer no bs, complete answer.`;
+const MANUAL_SCREENSHOT_PROMPT = `Look at what is on this screen and help me with it, following the role and context in your instructions.
+First work out what it is, then respond to that:
+- A question (written, quiz, multiple choice): give the answer directly; for multiple choice, name the correct option first.
+- A coding question or task: a few bullet points on the approach, then the complete solution in one code block, in the language shown on screen (keep any given function signatures).
+- An error or bug: the cause and the fix.
+- Anything else (email, chat, document, ticket, dashboard, slide, form, website): the summary, reply or next step I need.
+Be direct and complete. If there's something important I should notice (a risk, deadline, missing info), point it out briefly.`;
 
 async function captureManualScreenshot(imageQuality = null) {
     console.log('Manual screenshot triggered');
