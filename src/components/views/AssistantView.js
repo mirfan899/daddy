@@ -291,6 +291,27 @@ export class AssistantView extends LitElement {
             opacity: 0;
         }
 
+        .response-container pre {
+            position: relative;
+        }
+
+        .copy-code-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .copy-code-btn:hover {
+            color: var(--text-primary);
+        }
+
         .analyze-canvas {
             position: absolute;
             inset: -1px;
@@ -469,6 +490,22 @@ export class AssistantView extends LitElement {
             e.preventDefault();
             this.handleSendText();
         }
+    }
+
+    // Syntax-highlight code blocks and give each a Copy button.
+    _decorateCodeBlocks(container) {
+        container.querySelectorAll('pre > code').forEach(code => {
+            if (window.hljs) window.hljs.highlightElement(code);
+            const btn = document.createElement('button');
+            btn.className = 'copy-code-btn';
+            btn.textContent = 'Copy';
+            btn.onclick = () => {
+                window.require('electron').clipboard.writeText(code.textContent);
+                btn.textContent = 'Copied';
+                setTimeout(() => (btn.textContent = 'Copy'), 1500);
+            };
+            code.parentElement.appendChild(btn);
+        });
     }
 
     async handleScreenAnswer() {
@@ -658,6 +695,7 @@ export class AssistantView extends LitElement {
             const currentResponse = this.getCurrentResponse();
             const renderedResponse = this.renderMarkdown(currentResponse);
             container.innerHTML = renderedResponse;
+            this._decorateCodeBlocks(container);
             if (this.shouldAnimateResponse) {
                 this.dispatchEvent(new CustomEvent('response-animation-complete', { bubbles: true, composed: true }));
             }
@@ -668,6 +706,7 @@ export class AssistantView extends LitElement {
         const hasMultipleResponses = this.responses.length > 1;
 
         return html`
+            <link rel="stylesheet" href="assets/highlight-vscode-dark.min.css" />
             <div class="response-container" id="responseContainer"></div>
 
             ${hasMultipleResponses ? html`
