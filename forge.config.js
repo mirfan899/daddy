@@ -49,8 +49,8 @@ module.exports = {
             config: {
                 options: {
                     bin: 'Daddy',
-                    name: 'Cheating Daddy',
-                    productName: 'Cheating Daddy',
+                    name: 'Daddy',
+                    productName: 'Daddy',
                     genericName: 'AI Assistant',
                     description: 'AI assistant for interviews and learning',
                     categories: ['Development', 'Education'],
