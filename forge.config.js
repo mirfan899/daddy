@@ -48,6 +48,7 @@ module.exports = {
             platforms: ['linux'],
             config: {
                 options: {
+                    bin: 'Daddy',
                     name: 'Cheating Daddy',
                     productName: 'Cheating Daddy',
                     genericName: 'AI Assistant',

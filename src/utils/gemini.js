@@ -671,7 +671,7 @@ async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'int
         if (liveModel.includes('3.8')) {
             liveModel = 'gemini-3.8-live';
         } else if (liveModel.includes('flash') || !liveModel.includes('live')) {
-            liveModel = 'gemini-3.1-flash-live-preview';
+            liveModel = 'gemini-3.8-live'; // 3.1-flash-live-preview is legacy
         }
 
         console.log(`Connecting Live session with model: ${liveModel} (configured: ${getConfig().geminiLiveModel})`);
@@ -1064,7 +1064,7 @@ async function sendImageToGeminiHttp(base64Data, prompt) {
 
 async function sendTextToGeminiHttp(text) {
     const primaryModel = getAvailableModel();
-    const fallbackModels = [primaryModel, 'gemini-2.5-flash', 'gemini-3.5-flash-lite'].filter((m, idx, arr) => arr.indexOf(m) === idx);
+    const fallbackModels = [primaryModel, 'gemini-3.6-flash', 'gemini-3.5-flash-lite'].filter((m, idx, arr) => arr.indexOf(m) === idx);
     const apiKey = getApiKey();
     if (!apiKey) {
         return { success: false, error: 'No API key configured' };

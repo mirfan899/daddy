@@ -331,7 +331,7 @@ function incrementLimitCount(model) {
     }
 
     // Increment the appropriate model count
-    if (model === 'gemini-3.8-flash' || model === 'gemini-2.5-flash') {
+    if (model === 'gemini-3.8-flash' || model === 'gemini-3.6-flash') {
         todayEntry.flash.count++;
     } else if (model === 'gemini-3.5-flash-lite' || model === 'gemini-2.5-flash-lite') {
         todayEntry.flashLite.count++;

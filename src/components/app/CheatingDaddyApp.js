@@ -7,6 +7,7 @@ import { AssistantView } from '../views/AssistantView.js';
 import { OnboardingView } from '../views/OnboardingView.js';
 import { AICustomizeView } from '../views/AICustomizeView.js';
 import { FeedbackView } from '../views/FeedbackView.js';
+import { BrowserView } from '../views/BrowserView.js';
 
 export class CheatingDaddyApp extends LitElement {
     static styles = css`
@@ -791,6 +792,9 @@ export class CheatingDaddyApp extends LitElement {
             case 'history':
                 return html`<history-view></history-view>`;
 
+            case 'browser':
+                return html`<browser-view></browser-view>`;
+
             case 'assistant':
                 return html`
                     <assistant-view
@@ -839,6 +843,16 @@ export class CheatingDaddyApp extends LitElement {
                         stroke-width="2"
                         d="M13 3v7h6l-8 11v-7H5z"
                     />
+                </svg>`,
+            },
+            {
+                id: 'browser',
+                label: 'Browser',
+                icon: html`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m.6-3h16.8M3.6 15h16.8" />
+                        <path d="M11.5 3a17 17 0 0 0 0 18m1-18a17 17 0 0 1 0 18" />
+                    </g>
                 </svg>`,
             },
             {
@@ -987,7 +1001,7 @@ export class CheatingDaddyApp extends LitElement {
                 ${this.renderSidebar()}
                 <div class="content">
                     ${isLive ? this.renderLiveBar() : ''}
-                    <div class="content-inner ${isLive ? 'live' : ''}">${this.renderCurrentView()}</div>
+                    <div class="content-inner ${isLive || this.currentView === 'browser' ? 'live' : ''}">${this.renderCurrentView()}</div>
                 </div>
             </div>
         `;

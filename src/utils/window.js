@@ -28,6 +28,7 @@ function createWindow(sendToRenderer, geminiSessionRef) {
             enableBlinkFeatures: 'GetDisplayMedia',
             webSecurity: true,
             allowRunningInsecureContent: false,
+            webviewTag: true, // in-app browser (BrowserView)
         },
         backgroundColor: '#00000000',
     });

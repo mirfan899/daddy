@@ -15,6 +15,22 @@ function createMainWindow() {
     return mainWindow;
 }
 
+// In-app browser: guest pages never get Node or preloads, and popups (e.g. Google sign-in) load in the same view.
+app.on('web-contents-created', (_e, contents) => {
+    contents.on('will-attach-webview', (_ev, webPreferences) => {
+        delete webPreferences.preload;
+        webPreferences.nodeIntegration = false;
+        webPreferences.contextIsolation = true;
+        webPreferences.sandbox = true;
+    });
+    if (contents.getType() === 'webview') {
+        contents.setWindowOpenHandler(({ url }) => {
+            if (/^https?:/i.test(url)) contents.loadURL(url);
+            return { action: 'deny' };
+        });
+    }
+});
+
 app.whenReady().then(async () => {
     // Initialize storage (checks version, resets if needed)
     storage.initializeStorage();
