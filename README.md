@@ -2,61 +2,53 @@
 
 **[Download for Windows and Linux](https://github.com/mirfan899/daddy/releases/latest)**
 
-## Recall.ai - API for desktop recording
+A real-time AI assistant for calls, interviews, presentations and meetings. It listens to the audio, reads your screen when asked, and shows answers in a transparent overlay.
 
-If you’re looking for a hosted desktop recording API, consider checking out [Recall.ai](https://www.recall.ai/product/desktop-recording-sdk/?utm_source=github&utm_medium=sponsorship&utm_campaign=sohzm-cheating-daddy), an API that records Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
-
-This project is sponsored by Recall.ai.
-
----
-
-> [!NOTE]  
-> Use latest MacOS and Windows version, older versions have limited support
-
-> [!NOTE]  
-> During testing it wont answer if you ask something, you need to simulate interviewer asking question, which it will answer
-
-A real-time AI assistant that provides contextual help during video calls, interviews, presentations, and meetings using screen capture and audio analysis.
+Fork of [sohzm/cheating-daddy](https://github.com/sohzm/cheating-daddy) (GPL-3.0).
 
 ## Features
 
-- **Live AI Assistance**: Real-time help powered by Google Gemini 2.0 Flash Live
-- **Screen & Audio Capture**: Analyzes what you see and hear for contextual responses
-- **Multiple Profiles**: Interview, Sales Call, Business Meeting, Presentation, Negotiation
-- **Transparent Overlay**: Always-on-top window that can be positioned anywhere
-- **Click-through Mode**: Make window transparent to clicks when needed
-- **Cross-platform**: Works on macOS, Windows, and Linux (kinda, dont use, just for testing rn)
+- **Live assistance** with Gemini 3.8 Live, or Groq / local models
+- **Analyze Screen** (`Ctrl+Enter`): screenshot to answer, with highlighted code and a Copy button
+- **Built-in browser** in the sidebar, with a persistent login
+- **Profiles**: Job Interview, Sales Call, Business Meeting, Presentation, Negotiation, Exam Assistant
+- **Overlay**: transparent, always on top, click-through and movable by keyboard
+- **Hidden from screen capture** on Windows 10 (2004+) / 11 and macOS
 
-## Setup
+## Install
 
-1. **Get a Gemini API Key**: Visit [Google AI Studio](https://aistudio.google.com/apikey)
-2. **Install Dependencies**: `npm install`
-3. **Run the App**: `npm start`
+Download from [Releases](https://github.com/mirfan899/daddy/releases/latest):
 
-## Usage
+- **Windows**: `Daddy-<version>.Setup.exe`. The installer isn't code-signed, so in SmartScreen click *More info*, then *Run anyway*.
+- **Linux**: `Daddy-<version>-x64.AppImage`. Run `chmod +x Daddy-*.AppImage`, then start it.
 
-1. Enter your Gemini API key in the main window
-2. Choose your profile and language in settings
-3. Click "Start Session" to begin
-4. Position the window using keyboard shortcuts
-5. The AI will provide real-time assistance based on your screen and what interview asks
+Then enter a [Gemini API key](https://aistudio.google.com/apikey) (or a Groq key) on the home screen.
 
-## Keyboard Shortcuts
+## Keyboard shortcuts
 
-- **Window Movement**: `Ctrl/Cmd + Arrow Keys` - Move window
-- **Click-through**: `Ctrl/Cmd + M` - Toggle mouse events
-- **Close/Back**: `Ctrl/Cmd + \` - Close window or go back
-- **Send Message**: `Enter` - Send text to AI
+Shortcuts use `Ctrl` on Windows/Linux and `Cmd` (`Alt` for moving the window) on macOS. You can change them in Settings.
 
-## Audio Capture
+| Action | Shortcut |
+| --- | --- |
+| Start session / Analyze Screen | `Ctrl+Enter` |
+| Show / hide window | `Ctrl+\` |
+| Toggle click-through | `Ctrl+M` |
+| Move window | `Ctrl+Arrow keys` |
+| Previous / next response | `Ctrl+[` / `Ctrl+]` |
+| Scroll response | `Ctrl+Shift+Up` / `Ctrl+Shift+Down` |
+| Emergency erase | `Ctrl+Shift+E` |
 
-- **macOS**: [SystemAudioDump](https://github.com/Mohammed-Yasin-Mulla/Sound) for system audio
-- **Windows**: Loopback audio capture
-- **Linux**: Microphone input
+## Platform notes
 
-## Requirements
+- **Screen-capture hiding** works only on Windows and macOS. Linux has no OS support for it, so the app is visible in screenshots and screen shares there.
+- **Audio**: Windows uses loopback (system audio). macOS uses [SystemAudioDump](https://github.com/Mohammed-Yasin-Mulla/Sound). Linux uses the microphone.
 
-- Electron-compatible OS (macOS, Windows, Linux)
-- Gemini API key
-- Screen recording permissions
-- Microphone/audio permissions
+## Development
+
+```bash
+npm install
+npm start          # run the app
+npm run make       # build installers into out/make
+```
+
+Pushing a `v*` tag builds the Windows and Linux installers in GitHub Actions and attaches them to a release.
