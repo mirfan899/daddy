@@ -34,6 +34,7 @@ function isHttpUrl(url) {
 function openGeminiBrowser() {
     if (browserWindow && !browserWindow.isDestroyed()) {
         if (browserWindow.isMinimized()) browserWindow.restore();
+        browserWindow.setAlwaysOnTop(true, 'screen-saver', 2);
         browserWindow.show();
         browserWindow.focus();
         return browserWindow;
@@ -95,6 +96,10 @@ function openGeminiBrowser() {
             event.preventDefault();
         }
     });
+
+    // The main Daddy window is always-on-top at 'screen-saver' level; without this the
+    // browser window opens hidden behind it.
+    browserWindow.setAlwaysOnTop(true, 'screen-saver', 2);
 
     browserWindow.on('closed', () => {
         browserWindow = null;
