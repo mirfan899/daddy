@@ -425,10 +425,21 @@ async function sendToGroq(transcription) {
     }
 }
 
-async function sendImageToGroq(base64Data, prompt) {
-    const groqApiKey = getGroqApiKey();
+// Accepts a base URL (https://host, https://host/v1) or the full .../chat/completions URL.
+function toChatCompletionsUrl(url) {
+    const u = url.trim().replace(/\/+$/, '');
+    if (u.endsWith('/chat/completions')) return u;
+    return u.endsWith('/v1') ? `${u}/chat/completions` : `${u}/v1/chat/completions`;
+}
+
+// Screenshot -> streamed answer over the OpenAI chat-completions format.
+// Defaults to Groq; `custom` ({ url, key, model }) sends to the user's own API instead.
+async function sendImageToGroq(base64Data, prompt, custom = null) {
     const config = getConfig();
-    const model = config.groqImageModel;
+    const groqApiKey = custom ? custom.key : getGroqApiKey();
+    const model = custom ? custom.model : config.groqImageModel;
+    const endpoint = custom ? toChatCompletionsUrl(custom.url) : 'https://api.groq.com/openai/v1/chat/completions';
+    const providerName = custom ? 'Custom API' : 'Groq';
 
     logTransportEvent('groq.image.request', {
         model,
@@ -437,14 +448,14 @@ async function sendImageToGroq(base64Data, prompt) {
     });
 
     try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${groqApiKey}`,
+                ...(groqApiKey ? { Authorization: `Bearer ${groqApiKey}` } : {}),
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model,
+                ...(model ? { model } : {}),
                 messages: [
                     { role: 'system', content: currentSystemPrompt || 'You are a helpful assistant.' },
                     {
@@ -462,19 +473,20 @@ async function sendImageToGroq(base64Data, prompt) {
                 ],
                 stream: true,
                 temperature: 0.7,
-                max_completion_tokens: GROQ_MAX_COMPLETION_TOKENS,
-                ...getGroqReasoningOptions(model, config.disableGroqThinking),
+                ...(custom
+                    ? {}
+                    : { max_completion_tokens: GROQ_MAX_COMPLETION_TOKENS, ...getGroqReasoningOptions(model, config.disableGroqThinking) }),
             }),
         });
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Groq image API error:', response.status, errorText);
+            console.error(`${providerName} image API error:`, response.status, errorText);
             logTransportEvent('groq.image.http_error', {
                 status: response.status,
                 body: errorText,
             });
-            return { success: false, error: `Groq error: ${response.status}` };
+            return { success: false, error: `${providerName} error: ${response.status} ${errorText.slice(0, 200)}` };
         }
 
         logTransportEvent('groq.image.http_response', {
@@ -630,7 +642,7 @@ async function sendToGemma(transcription) {
     }
 }
 
-async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'interview', language = 'en-US', isReconnect = false) {
+async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'teamlead', language = 'en-US', isReconnect = false) {
     if (isInitializingSession) {
         console.log('Session initialization already in progress');
         return false;
@@ -1088,7 +1100,7 @@ async function sendTextToGeminiHttp(text) {
     const prefs = getPreferences ? getPreferences() : {};
     const systemPrompt =
         currentSystemPrompt ||
-        getSystemPrompt(prefs.selectedProfile || currentProfile || 'interview', prefs.customPrompt || currentCustomPrompt || '');
+        getSystemPrompt(prefs.selectedProfile || currentProfile || 'teamlead', prefs.customPrompt || currentCustomPrompt || '');
 
     const ai = new GoogleGenAI({ apiKey: apiKey });
 
@@ -1163,7 +1175,7 @@ function setupGeminiIpcHandlers(geminiSessionRef) {
         }
     });
 
-    ipcMain.handle('initialize-gemini', async (event, apiKey, customPrompt, profile = 'interview', language = 'en-US') => {
+    ipcMain.handle('initialize-gemini', async (event, apiKey, customPrompt, profile = 'teamlead', language = 'en-US') => {
         currentProviderMode = 'byok';
         const session = await initializeGeminiSession(apiKey, customPrompt, profile, language);
         if (session) {
@@ -1288,7 +1300,12 @@ function setupGeminiIpcHandlers(geminiSessionRef) {
                 return result;
             }
 
-            const result = hasGroqKey() ? await sendImageToGroq(data, prompt) : await sendImageToGeminiHttp(data, prompt);
+            const { customApiUrl, customApiKey, customApiModel } = getConfig();
+            const result = customApiUrl
+                ? await sendImageToGroq(data, prompt, { url: customApiUrl, key: customApiKey, model: customApiModel })
+                : hasGroqKey()
+                  ? await sendImageToGroq(data, prompt)
+                  : await sendImageToGeminiHttp(data, prompt);
             return result;
         } catch (error) {
             console.error('Error sending image:', error);

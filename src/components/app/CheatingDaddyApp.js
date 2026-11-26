@@ -398,7 +398,7 @@ export class CheatingDaddyApp extends LitElement {
         this.startTime = null;
         this.isRecording = false;
         this.sessionActive = false;
-        this.selectedProfile = 'interview';
+        this.selectedProfile = 'teamlead';
         this.selectedLanguage = 'en-US';
         this.selectedScreenshotInterval = '5';
         this.selectedImageQuality = 'medium';
@@ -449,7 +449,7 @@ export class CheatingDaddyApp extends LitElement {
             const [config, prefs] = await Promise.all([cheatingDaddy.storage.getConfig(), cheatingDaddy.storage.getPreferences()]);
 
             this.currentView = config.onboarded ? 'main' : 'onboarding';
-            this.selectedProfile = prefs.selectedProfile || 'interview';
+            this.selectedProfile = prefs.selectedProfile || 'teamlead';
             this.selectedLanguage = prefs.selectedLanguage || 'en-US';
             this.selectedScreenshotInterval = prefs.selectedScreenshotInterval || '5';
             this.selectedImageQuality = prefs.selectedImageQuality || 'medium';

@@ -197,7 +197,7 @@ export class CustomizeView extends LitElement {
 
     constructor() {
         super();
-        this.selectedProfile = 'interview';
+        this.selectedProfile = 'teamlead';
         this.selectedLanguage = 'en-US';
         this.selectedImageQuality = 'medium';
         this.layoutMode = 'normal';
@@ -245,6 +245,7 @@ export class CustomizeView extends LitElement {
 
     getProfiles() {
         return [
+            { value: 'teamlead', name: 'Team Lead (HIPAA)' },
             { value: 'interview', name: 'Job Interview' },
             { value: 'sales', name: 'Sales Call' },
             { value: 'meeting', name: 'Business Meeting' },
@@ -481,7 +482,7 @@ export class CustomizeView extends LitElement {
             // Restore all preferences to defaults
             const defaults = {
                 customPrompt: '',
-                selectedProfile: 'interview',
+                selectedProfile: 'teamlead',
                 selectedLanguage: 'en-US',
                 selectedScreenshotInterval: '5',
                 selectedImageQuality: 'medium',

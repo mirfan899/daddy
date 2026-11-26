@@ -332,6 +332,7 @@ export class HistoryView extends LitElement {
 
     getProfileNames() {
         return {
+            teamlead: 'Team Lead (HIPAA)',
             interview: 'Job Interview',
             sales: 'Sales Call',
             meeting: 'Business Meeting',

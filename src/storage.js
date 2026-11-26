@@ -12,6 +12,9 @@ const DEFAULT_CONFIG = {
     geminiLiveModel: 'gemini-3.8-flash',
     groqModel: 'qwen/qwen3.6-27b',
     groqImageModel: 'qwen/qwen3.6-27b',
+    customApiUrl: '', // OpenAI-compatible endpoint for screenshot analysis (empty = off)
+    customApiKey: '',
+    customApiModel: '',
     disableGroqThinking: true,
 };
 
@@ -23,7 +26,7 @@ const DEFAULT_CREDENTIALS = {
 const DEFAULT_PREFERENCES = {
     customPrompt: '',
     providerMode: 'byok',
-    selectedProfile: 'interview',
+    selectedProfile: 'teamlead',
     selectedLanguage: 'en-US',
     selectedScreenshotInterval: '5',
     selectedImageQuality: 'medium',

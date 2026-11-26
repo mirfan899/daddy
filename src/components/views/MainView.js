@@ -698,6 +698,7 @@ export class MainView extends LitElement {
         _geminiKey: { state: true },
         _groqKey: { state: true },
         _openaiKey: { state: true },
+        _customApi: { state: true },
         _geminiLiveModel: { state: true },
         _groqModel: { state: true },
         _groqImageModel: { state: true },
@@ -715,7 +716,7 @@ export class MainView extends LitElement {
         super();
         this.onStart = () => {};
         this.onExternalLink = () => {};
-        this.selectedProfile = 'interview';
+        this.selectedProfile = 'teamlead';
         this.onProfileChange = () => {};
         this.isInitializing = false;
         this.whisperDownloading = false;
@@ -727,6 +728,7 @@ export class MainView extends LitElement {
         this._geminiKey = '';
         this._groqKey = '';
         this._openaiKey = '';
+        this._customApi = { customApiUrl: '', customApiKey: '', customApiModel: '' };
         this._geminiLiveModel = 'gemini-3.8-flash';
         this._groqModel = 'qwen/qwen3.6-27b';
         this._groqImageModel = 'qwen/qwen3.6-27b';
@@ -768,6 +770,11 @@ export class MainView extends LitElement {
             this._groqKey = (await cheatingDaddy.storage.getGroqApiKey().catch(() => '')) || '';
             this._openaiKey = creds.openaiKey || '';
             this._geminiLiveModel = config.geminiLiveModel || 'gemini-3.8-flash';
+            this._customApi = {
+                customApiUrl: config.customApiUrl || '',
+                customApiKey: config.customApiKey || '',
+                customApiModel: config.customApiModel || '',
+            };
             this._groqModel = config.groqModel || 'qwen/qwen3.6-27b';
             this._groqImageModel = config.groqImageModel || 'qwen/qwen3.6-27b';
             this._disableGroqThinking = config.disableGroqThinking === true;
@@ -943,6 +950,11 @@ export class MainView extends LitElement {
         this._groqKey = val;
         await cheatingDaddy.storage.setGroqApiKey(val);
         this.requestUpdate();
+    }
+
+    async _saveCustomApi(key, val) {
+        this._customApi = { ...this._customApi, [key]: val.trim() };
+        await cheatingDaddy.storage.updateConfig(key, val.trim());
     }
 
     async _saveGeminiLiveModel(val) {
@@ -1184,6 +1196,48 @@ export class MainView extends LitElement {
                     <div class="form-group">
                         <label class="form-label">Gemini Live Model</label>
                         <input type="text" .value=${this._geminiLiveModel} @input=${e => this._saveGeminiLiveModel(e.target.value)} />
+                    </div>
+                </div>
+            </details>
+
+            <details class="config-section">
+                <summary class="config-summary">
+                    <span class="config-summary-text">
+                        <span class="config-summary-title">Screenshot API</span>
+                        <span class="config-summary-description">Your own OpenAI-compatible API for Analyze Screen</span>
+                    </span>
+                    ${this._renderConfigChevron()}
+                </summary>
+                <div class="config-content">
+                    <div class="form-group">
+                        <label class="form-label">API URL</label>
+                        <input
+                            type="text"
+                            placeholder="Optional, e.g. https://your-api.com/v1"
+                            .value=${this._customApi.customApiUrl}
+                            @change=${e => this._saveCustomApi('customApiUrl', e.target.value)}
+                        />
+                        <div class="form-hint">When set, screenshots go here instead of Gemini/Groq. Leave empty to turn off.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">API Key</label>
+                        <input
+                            type="password"
+                            placeholder="Optional"
+                            .value=${this._customApi.customApiKey}
+                            @change=${e => this._saveCustomApi('customApiKey', e.target.value)}
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Model</label>
+                        <input
+                            type="text"
+                            placeholder="Optional"
+                            .value=${this._customApi.customApiModel}
+                            @change=${e => this._saveCustomApi('customApiModel', e.target.value)}
+                        />
                     </div>
                 </div>
             </details>

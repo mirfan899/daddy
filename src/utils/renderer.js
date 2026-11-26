@@ -140,7 +140,7 @@ function arrayBufferToBase64(buffer) {
     return btoa(binary);
 }
 
-async function initializeGemini(profile = 'interview', language = 'en-US') {
+async function initializeGemini(profile = 'teamlead', language = 'en-US') {
     const apiKey = await storage.getApiKey();
     if (apiKey) {
         const prefs = await storage.getPreferences();
@@ -153,7 +153,7 @@ async function initializeGemini(profile = 'interview', language = 'en-US') {
     }
 }
 
-async function initializeLocal(profile = 'interview') {
+async function initializeLocal(profile = 'teamlead') {
     const prefs = await storage.getPreferences();
     const localLlmModel = prefs.localLlmModel || 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M';
     const whisperModel = prefs.whisperModel || 'tiny.en';
@@ -173,7 +173,7 @@ async function cancelLocalInitialization() {
     return ipcRenderer.invoke('cancel-local-initialization');
 }
 
-async function initializeCloud(profile = 'interview') {
+async function initializeCloud(profile = 'teamlead') {
     const creds = await storage.getCredentials();
     const token = creds.cloudToken;
     if (!token || !token.trim()) {
