@@ -44,6 +44,8 @@ function createWindow(sendToRenderer, geminiSessionRef) {
     );
 
     mainWindow.setContentProtection(true);
+    // Windows can drop capture exclusion after hide()/showInactive(), so re-apply on every show.
+    mainWindow.on('show', () => mainWindow.setContentProtection(true));
     if (process.platform === 'win32') {
         mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
