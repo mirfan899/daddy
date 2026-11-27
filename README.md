@@ -1,6 +1,6 @@
 <img width="1299" height="424" alt="Daddy" src="docs/banner.png" />
 
-**[Download for Windows and Linux](https://github.com/mirfan899/daddy/releases/latest)**
+**[Download for Windows](https://github.com/mirfan899/daddy/releases/latest)**
 
 A real-time AI assistant for calls, interviews, presentations and meetings. It listens to the audio, reads your screen when asked, and shows answers in a transparent overlay.
 
@@ -17,16 +17,13 @@ Fork of [sohzm/cheating-daddy](https://github.com/sohzm/cheating-daddy) (GPL-3.0
 
 ## Install
 
-Download from [Releases](https://github.com/mirfan899/daddy/releases/latest):
-
-- **Windows**: `Daddy-<version>.Setup.exe`. The installer isn't code-signed, so in SmartScreen click *More info*, then *Run anyway*.
-- **Linux**: `Daddy-<version>-x64.AppImage`. Run `chmod +x Daddy-*.AppImage`, then start it.
+Download from [Releases](https://github.com/mirfan899/daddy/releases/latest): `Daddy-<version>.Setup.exe` for Windows. The installer isn't code-signed, so in SmartScreen click *More info*, then *Run anyway*.
 
 Then enter a [Gemini API key](https://aistudio.google.com/apikey) (or a Groq key) on the home screen.
 
 ## Keyboard shortcuts
 
-Shortcuts use `Ctrl` on Windows/Linux and `Cmd` (`Alt` for moving the window) on macOS. You can change them in Settings.
+Shortcuts use `Ctrl` on Windows and `Cmd` (`Alt` for moving the window) on macOS. You can change them in Settings.
 
 | Action | Shortcut |
 | --- | --- |
@@ -40,8 +37,8 @@ Shortcuts use `Ctrl` on Windows/Linux and `Cmd` (`Alt` for moving the window) on
 
 ## Platform notes
 
-- **Screen-capture hiding** works only on Windows and macOS. Linux has no OS support for it, so the app is visible in screenshots and screen shares there.
-- **Audio**: Windows uses loopback (system audio). macOS uses [SystemAudioDump](https://github.com/Mohammed-Yasin-Mulla/Sound). Linux uses the microphone.
+- **Windows** is the supported platform. Audio uses loopback (system audio) and/or the microphone.
+- **Linux** isn't supported: there's no way to hide the window from screen capture, and audio capture is unreliable.
 
 ## Development
 
@@ -51,4 +48,4 @@ npm start          # run the app
 npm run make       # build installers into out/make
 ```
 
-Pushing a `v*` tag builds the Windows and Linux installers in GitHub Actions and attaches them to a release.
+Pushing a `v*` tag builds the Windows installer in GitHub Actions and attaches it to a release.
