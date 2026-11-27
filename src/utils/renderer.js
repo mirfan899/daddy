@@ -7,7 +7,7 @@ let audioContext = null;
 let audioProcessor = null;
 let micAudioProcessor = null;
 let audioBuffer = [];
-const SAMPLE_RATE = 24000;
+const SAMPLE_RATE = 16000; // Gemini Live native input rate
 const AUDIO_CHUNK_DURATION = 0.1; // seconds
 const BUFFER_SIZE = 4096; // Increased buffer size for smoother audio
 
@@ -389,7 +389,7 @@ function setupLinuxMicProcessing(micStream) {
 
             await ipcRenderer.invoke('send-mic-audio-content', {
                 data: base64Data,
-                mimeType: 'audio/pcm;rate=24000',
+                mimeType: `audio/pcm;rate=${SAMPLE_RATE}`,
             });
         }
     };
@@ -422,7 +422,7 @@ function setupLinuxSystemAudioProcessing() {
 
             await ipcRenderer.invoke('send-audio-content', {
                 data: base64Data,
-                mimeType: 'audio/pcm;rate=24000',
+                mimeType: `audio/pcm;rate=${SAMPLE_RATE}`,
             });
         }
     };
@@ -452,7 +452,7 @@ function setupWindowsLoopbackProcessing() {
 
             await ipcRenderer.invoke('send-audio-content', {
                 data: base64Data,
-                mimeType: 'audio/pcm;rate=24000',
+                mimeType: `audio/pcm;rate=${SAMPLE_RATE}`,
             });
         }
     };

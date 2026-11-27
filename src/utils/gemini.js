@@ -771,12 +771,7 @@ async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'tea
                 proactivity: { proactiveAudio: true },
                 outputAudioTranscription: {},
                 tools: enabledTools,
-                // Enable speaker diarization
-                inputAudioTranscription: {
-                    enableSpeakerDiarization: true,
-                    minSpeakerCount: 2,
-                    maxSpeakerCount: 2,
-                },
+                inputAudioTranscription: {},
                 contextWindowCompression: { slidingWindow: {} },
                 speechConfig: { languageCode: language },
                 systemInstruction: {
